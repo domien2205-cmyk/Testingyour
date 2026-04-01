@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizPDF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.js"></script>
+  <meta name="theme-color" content="#1e2937">
+  <style>
+    body { font-family: system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4">
+
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold text-center py-8">📚 QuizPDF</h1>
+
+    <div id="home">
+      <div class="bg-slate-900 rounded-3xl p-10 text-center">
+        <p class="text-xl mb-8">Carica un PDF e trasforma il suo contenuto in un test</p>
+        <label class="block border-2 border-dashed border-slate-400 hover:border-blue-500 rounded-3xl p-16 cursor-pointer">
+          <input type="file" id="pdfInput" accept="application/pdf" class="hidden">
+          <span class="text-6xl block mb-4">📄</span>
+          <span class="text-lg font-medium">Tocca per caricare il PDF</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="loading" class="hidden text-center py-20">
+      <div class="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+      <p class="mt-8 text-xl" id="status">Caricamento in corso...</p>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.js';
+
+    document.getElementById('pdfInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('status').textContent = 'Leggo il PDF...';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+        
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(item => item.str).join(' ') + '\n';
+        }
+
+        alert('✅ PDF letto con successo!\nPagine: ' + pdf.numPages);
+        console.log('Testo estratto:', text.substring(0, 300));
+
+      } catch (err) {
+        alert('Errore: ' + err.message);
+        console.error(err);
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
